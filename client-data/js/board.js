@@ -375,24 +375,30 @@ Tools.send = function (data, toolName) {
   Tools.socket.emit("broadcast", message);
 };
 
+var hasAccess;
 Tools.drawAndSend = function (data, tool) {
   if (tool == null) tool = Tools.curTool;
   Tools.socket.on("sendUser", (userId) => {
-	let userIds=[];
-	if(localStorage.getItem(Tools.boardName)!==null){
-		// userIds = localStorage.getItem(Tools.boardName).split();
-		userIds = JSON.parse(localStorage.getItem(Tools.boardName));
-	}
+    let userIds = [];
+    if (localStorage.getItem(Tools.boardName) !== null) {
+      // userIds = localStorage.getItem(Tools.boardName).split();
+      userIds = JSON.parse(localStorage.getItem(Tools.boardName));
+    }
     console.log(typeof userIds);
-	console.log("userIds.includes(userId) ",userIds.includes(userId));
-	if(userIds ==null){
-		localStorage.setItem(Tools.boardName, JSON.stringify(userId));
-	}else if(!userIds.includes(userId)){
-		console.log("inside else")
+    console.log("userIds.includes(userId) ", userIds.includes(userId));
+    if (userIds.length == 0) {
+      localStorage.setItem(Tools.boardName, JSON.stringify([userId]));
+    } else if (!userIds.includes(userId)) {
+      callAlert(hasAccess);
+	  console.log("hasAccess ",hasAccess)
+	  if(hasAccess){
 		userIds.push(userId);
 		userIds = userIds.slice(0, 20);
 		localStorage.setItem(Tools.boardName, JSON.stringify(userIds));
-	}
+	  }
+      console.log("You have been denied");
+      
+    }
   });
   console.log("data ", data);
   tool.draw(data, true);
@@ -429,6 +435,11 @@ function messageForTool(message) {
   }
 }
 
+function callAlert() {
+	hasAccess = confirm("Give access??");
+
+  return false;
+}
 // Apply the function to all arguments by batches
 function batchCall(fn, args) {
   var BATCH_SIZE = 1024;
