@@ -32,12 +32,17 @@ function startIO(app) {
   io = iolib(app);
   if (config.AUTH_SECRET_KEY) {
     // Middleware to check for valid jwt
-    io.use(function(socket, next) {
-      if(socket.handshake.query && socket.handshake.query.token) {
-        jsonwebtoken.verify(socket.handshake.query.token, config.AUTH_SECRET_KEY, function(err, decoded) {
-          if(err) return next(new Error("Authentication error: Invalid JWT"));
-          next();
-        })
+    io.use(function (socket, next) {
+      if (socket.handshake.query && socket.handshake.query.token) {
+        jsonwebtoken.verify(
+          socket.handshake.query.token,
+          config.AUTH_SECRET_KEY,
+          function (err, decoded) {
+            if (err)
+              return next(new Error("Authentication error: Invalid JWT"));
+            next();
+          }
+        );
       } else {
         next(new Error("Authentication error: No jwt provided"));
       }
@@ -78,8 +83,19 @@ function handleSocketConnection(socket) {
     socket.join(name);
 
     var board = await getBoard(name);
-    board.users.add(socket.id);
-    log("board joined", { board: board.name, users: board.users.size });
+    var userId = "";
+    
+    userId += String(socket.id);
+    board.users.set(board.name, userId);
+    log("user id ", userId);
+    // send userId to server to in localstorage
+     
+    // log("board joined", { board: board.name, users: board });
+    log("users joined", { board: board, users: board.users.get(board.name) });
+    log("users size", {
+      board: board.name,
+      users: board.users.get(board.name).split(",").length,
+    });
     gauge("connected." + name, board.users.size);
     return board;
   }
@@ -187,6 +203,7 @@ function handleMessage(boardName, message, socket) {
   if (message.tool === "Cursor") {
     message.socket = socket.id;
   } else {
+    socket.emit('sendUser',socket.id);
     saveHistory(boardName, message);
   }
 }
@@ -196,6 +213,8 @@ async function saveHistory(boardName, message) {
     console.error("Received a badly formatted message (no tool). ", message);
   }
   var board = await getBoard(boardName);
+  log("processMessage");
+  log("message sent to processMessage ", message);
   board.processMessage(message);
 }
 

@@ -49,7 +49,7 @@ class BoardData {
       "board-" + encodeURIComponent(name) + ".json"
     );
     this.lastSaveDate = Date.now();
-    this.users = new Set();
+    this.users = new Map();
     this.saveMutex = new Mutex();
   }
 
