@@ -85,10 +85,17 @@ Tools.connect = function () {
     });
   });
 
-  this.socket.on("hello",(msg)=>{
-	console.log("message from ui ",msg)
-	alert("someone trying to access")
-  })
+    this.socket.on("hello",(msg)=>{
+  	console.log("message from ui ",msg)
+  	callingAlert();
+    })
+
+  function callingAlert() {
+    hasAccess = confirm("someone trying to access");
+    console.log("hasAccess ", hasAccess);
+	checkHasAccess()
+    return false;
+  }
 
   this.socket.on("reconnect", function onReconnection() {
     Tools.socket.emit("joinboard", Tools.boardName);
@@ -394,9 +401,11 @@ Tools.drawAndSend = function (data, tool) {
     if (userIds.length == 0) {
       localStorage.setItem(Tools.boardName, JSON.stringify([userId]));
     } else if (!userIds.includes(userId)) {
-      callAlert();
-      console.log("hasAccess ", hasAccess);
+      //call callAlert
+      checkHasAccess();
+      console.log("after calling checkhasacess ", hasAccess);
       if (hasAccess) {
+		console.log("wow")
         userIds.push(userId);
         userIds = userIds.slice(0, 20);
         localStorage.setItem(Tools.boardName, JSON.stringify(userIds));
@@ -406,10 +415,11 @@ Tools.drawAndSend = function (data, tool) {
     }
   });
   console.log("data ", data);
+  
   tool.draw(data, true);
   Tools.send(data, tool.name);
 };
-
+callAlert();
 //Object containing the messages that have been received before the corresponding tool
 //is loaded. keys : the name of the tool, values : array of messages for this tool
 Tools.pendingMessages = {};
@@ -441,9 +451,11 @@ function messageForTool(message) {
 }
 
 function callAlert() {
-  Tools.socket.emit("callAlert","callAlert");
-//   hasAccess = confirm("give access");
-  return false;
+  Tools.socket.emit("callAlert", "callAlert"); 
+}
+
+function checkHasAccess(){
+	return hasAccess;
 }
 // Apply the function to all arguments by batches
 function batchCall(fn, args) {
@@ -504,10 +516,7 @@ function updateDocumentTitle() {
     scrollTimeout = setTimeout(function updateHistory() {
       var hash =
         "#" + (x | 0) + "," + (y | 0) + "," + Tools.getScale().toFixed(1);
-      if (
-        Date.now() - lastStateUpdate > 5000 &&
-        hash !== window.location.hash
-      ) {
+      if (Date.now() - lastStateUpdate > 500 && hash !== window.location.hash) {
         window.history.pushState({}, "", hash);
         lastStateUpdate = Date.now();
       } else {
