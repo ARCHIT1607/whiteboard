@@ -470,7 +470,7 @@
  }
  
  function callAlert() {
-   Tools.socket.emit("callAlert", "callAlert");
+   Tools.socket.emit("callAlert", Tools.boardName);
  }
  
  function checkHasAccess() {

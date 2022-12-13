@@ -108,10 +108,10 @@ function handleSocketConnection(socket) {
     return board;
   }
 
-  socket.on("callAlert", (message) => {
-    log("inside call Alert", { message });
+  socket.on("callAlert", (boardName) => {
+    log("inside call Alert", { boardName });
     socket.broadcast
-      .to("r303q6v6MMT83zihDAQVWucoAzTFxL-ik-uwdYLuzVQ-")
+      .to(boardName)
       .emit("hello", socket.id);
     // socket.broadcast.emit("hello", "world");
   });
