@@ -85,6 +85,11 @@ Tools.connect = function () {
     });
   });
 
+  this.socket.on("hello",(msg)=>{
+	console.log("message from ui ",msg)
+	alert("someone trying to access")
+  })
+
   this.socket.on("reconnect", function onReconnection() {
     Tools.socket.emit("joinboard", Tools.boardName);
   });
@@ -389,15 +394,15 @@ Tools.drawAndSend = function (data, tool) {
     if (userIds.length == 0) {
       localStorage.setItem(Tools.boardName, JSON.stringify([userId]));
     } else if (!userIds.includes(userId)) {
-      callAlert(hasAccess);
-	  console.log("hasAccess ",hasAccess)
-	  if(hasAccess){
-		userIds.push(userId);
-		userIds = userIds.slice(0, 20);
-		localStorage.setItem(Tools.boardName, JSON.stringify(userIds));
-	  }
-      console.log("You have been denied");
-      
+      callAlert();
+      console.log("hasAccess ", hasAccess);
+      if (hasAccess) {
+        userIds.push(userId);
+        userIds = userIds.slice(0, 20);
+        localStorage.setItem(Tools.boardName, JSON.stringify(userIds));
+      } else {
+        console.log("You have been denied");
+      }
     }
   });
   console.log("data ", data);
@@ -436,8 +441,8 @@ function messageForTool(message) {
 }
 
 function callAlert() {
-	hasAccess = confirm("Give access??");
-
+  Tools.socket.emit("callAlert","callAlert");
+//   hasAccess = confirm("give access");
   return false;
 }
 // Apply the function to all arguments by batches

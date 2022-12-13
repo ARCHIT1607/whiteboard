@@ -84,12 +84,19 @@ function handleSocketConnection(socket) {
 
     var board = await getBoard(name);
     var userId = "";
-    
+
     userId += String(socket.id);
     board.users.set(board.name, userId);
     log("user id ", userId);
     // send userId to server to in localstorage
-     
+    // socket.on("callAlert", (hasAccess,boardName) => {
+    //   log("inside call Alert", {hasAccess,boardName});
+    //   if (!hasAccess) {
+    //     log("inside hasAccess true")
+    //     socket.emit("callConfirm", "give access??");
+    //     // socket.broadcast.emit("callConfirm", "give access??");
+    //   }
+    // });
     // log("board joined", { board: board.name, users: board });
     log("users joined", { board: board, users: board.users.get(board.name) });
     log("users size", {
@@ -97,8 +104,15 @@ function handleSocketConnection(socket) {
       users: board.users.get(board.name).split(",").length,
     });
     gauge("connected." + name, board.users.size);
+    
     return board;
   }
+
+  socket.on("callAlert", (message) => {
+      log("inside call Alert", {message});
+      socket.broadcast.to("r303q6v6MMT83zihDAQVWucoAzTFxL-ik-uwdYLuzVQ-").emit("hello", "world");
+      // socket.broadcast.emit("hello", "world");
+    });
 
   socket.on(
     "error",
@@ -203,7 +217,7 @@ function handleMessage(boardName, message, socket) {
   if (message.tool === "Cursor") {
     message.socket = socket.id;
   } else {
-    socket.emit('sendUser',socket.id);
+    socket.emit("sendUser", socket.id);
     saveHistory(boardName, message);
   }
 }
