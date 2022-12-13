@@ -104,15 +104,17 @@ function handleSocketConnection(socket) {
       users: board.users.get(board.name).split(",").length,
     });
     gauge("connected." + name, board.users.size);
-    
+
     return board;
   }
 
   socket.on("callAlert", (message) => {
-      log("inside call Alert", {message});
-      socket.broadcast.to("r303q6v6MMT83zihDAQVWucoAzTFxL-ik-uwdYLuzVQ-").emit("hello", "world");
-      // socket.broadcast.emit("hello", "world");
-    });
+    log("inside call Alert", { message });
+    socket.broadcast
+      .to("r303q6v6MMT83zihDAQVWucoAzTFxL-ik-uwdYLuzVQ-")
+      .emit("hello", socket.id);
+    // socket.broadcast.emit("hello", "world");
+  });
 
   socket.on(
     "error",
@@ -131,6 +133,7 @@ function handleSocketConnection(socket) {
 
   var lastEmitSecond = (Date.now() / config.MAX_EMIT_COUNT_PERIOD) | 0;
   var emitCount = 0;
+  var allow = false;
   socket.on(
     "broadcast",
     noFail(function onBroadcast(message) {
@@ -172,12 +175,20 @@ function handleSocketConnection(socket) {
         log("BLOCKED MESSAGE", message.data);
         return;
       }
-
-      // Save the message in the board
+      socket.on("checkAccess", (hasAccess) => {
+        log("hasAccess ", hasAccess);
+        allow = hasAccess;
+        log("allow ", allow);
+      });
+      log("outside allow ", allow);
       handleMessage(boardName, data, socket);
+      // Save the message in the board
+      // handleMessage(boardName, data, socket);
 
       //Send data to all other users connected on the same board
-      socket.broadcast.to(boardName).emit("broadcast", data);
+      if (allow) {
+        socket.broadcast.to(boardName).emit("broadcast", data);
+      }
     })
   );
 
@@ -218,6 +229,7 @@ function handleMessage(boardName, message, socket) {
     message.socket = socket.id;
   } else {
     socket.emit("sendUser", socket.id);
+    log("call send user");
     saveHistory(boardName, message);
   }
 }
